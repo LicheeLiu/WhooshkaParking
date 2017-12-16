@@ -1,8 +1,11 @@
+import os
+
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
-import os, sys
+import pandas as pd
+import csv
 
-filepath = "C:\Disabled parking\Fitzroy"
+filepath = "/Users/Zubin/Desktop/samplepics"  ### enter local filepath for folder of pics here
 
 def get_exif_data(image):
     """Returns a dictionary from the exif data of an PIL Image item. Also converts the GPS Tags"""
@@ -52,7 +55,6 @@ def get_lat_lon(exif_data):
 
     if "GPSInfo" in exif_data:		
         gps_info = exif_data["GPSInfo"]
-
         gps_latitude = _get_if_exist(gps_info, "GPSLatitude")
         gps_latitude_ref = _get_if_exist(gps_info, 'GPSLatitudeRef')
         gps_longitude = _get_if_exist(gps_info, 'GPSLongitude')
@@ -75,13 +77,32 @@ def get_lat_lon(exif_data):
 ################
 if __name__ == "__main__":
 
-    pics = os.listdir(filepath)
+    pics = os.listdir(filepath)   # returns a list of the files in the directory
     pics = [p for p in pics if p.endswith(".JPG") or p.endswith(".jpg")]
-     
+    latList = [] #empty list that will store lats
+    lonList = [] #empty list that will store longs
+
+    ### here we create a new dictionary and a pandas dataframe to add the output to
+    newDict ={}
+    df = pd.DataFrame(data = newDict, columns = ["Filename", "Latitude",  "Longitude"])
+
+    # now iterate through the list of pics
     for pic in pics:
-        image = Image.open(filepath + '\\'+ pic)
+        image = Image.open(filepath + '/' + pic)   # for Windows change value of filepath and also make it '\\'
         exif_data = get_exif_data(image)
-        print(pic)
-        print get_lat_lon(exif_data)
-   
+        output = get_lat_lon(exif_data)  # create a tuple object for the lat/long
+        latList.append(output[0])
+        lonList.append(output[1])
+        #print pic          #### returns the filename
+        ### print image.filename #### also returns the filename
+        #print get_lat_lon(exif_data)
+
+
+    df["Filename"] = pics
+    df["Latitude"] = latList
+    df["Longitude"] = lonList
+    print df
+    df.to_csv("/Users/Zubin/Desktop/samplepics/picsDataFrame.csv")  ## choose filepath and filename
+
+
 
